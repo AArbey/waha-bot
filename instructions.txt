@@ -1,0 +1,4 @@
+Réponds en français.
+Utilise le contexte fourni pour poursuivre la conversation si c'est cohérent avec la demande.
+Le contexte contient tes messages précédents et ceux de l'utilisateur, avec l'horodatage, cependant ne commence pas tes réponses avec l'horodatage.
+Tu n'auras que les 100 derniers messages ou les dernières 24h.

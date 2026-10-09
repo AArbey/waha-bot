@@ -8,7 +8,6 @@ from flask import Flask
 from flask import request
 from faster_whisper import WhisperModel
 import time
-import datetime
 
 
 app = Flask(__name__)
@@ -25,6 +24,7 @@ PUBLIC_BASE_URL = os.getenv("WAHA_PUBLIC_URL")
 LLM_URL = os.getenv("LLM_URL")
 LLM_MODEL = os.getenv("LLM_MODEL")
 ALLOWED_USERS = os.getenv('ALLOWED_USERS').split(',')
+NUMBER_OF_THREADS_FOR_WHISPER_MODEL = int(os.getenv("NUMBER_OF_THREADS_FOR_WHISPER_MODEL", 16))
 
 TIMEZONE = pytz.timezone(os.getenv("TZ"))
 MEDIA_RESPONSE_BASE_URL = "http://localhost:3000/api/"
@@ -36,7 +36,7 @@ model = WhisperModel(
     "small",
     device="cpu",
     compute_type="int8",
-    cpu_threads=16
+    cpu_threads=NUMBER_OF_THREADS_FOR_WHISPER_MODEL
 )
 
 def transcribe_audio(file_path):
@@ -55,7 +55,6 @@ def transcribe_audio(file_path):
         transcription.append(segment.text.strip())
     
     output_text = " ".join(transcription)
-    app.logger.info(f"Transcription result: {output_text}")
     return output_text
 
 
@@ -146,13 +145,9 @@ def typing(chat_id, seconds):
     stop_typing(chat_id=chat_id)
 
 def ask_ai(message, recent_messages=None):
-    instructions = (
-        "Réponds en français. "
-        "Utilise le contexte fourni pour poursuivre la conversation si c'est cohérent avec la demande. "
-        "Le contexte contient tes messages précédents et ceux de l'utilisateur, avec l'horodatage, cependant ne commence pas tes réponses avec l'horodatage."
-        "Tu n'auras que les 100 derniers messages ou les dernières 24h."
-    )
-    
+    # Read instructions from "instructions.txt" file
+    with open("instructions.txt", "r") as f:
+        instructions = f.read()
 
     messages = [
         {"role": "system", "content": instructions},
