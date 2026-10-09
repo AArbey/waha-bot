@@ -1,0 +1,24 @@
+services:
+  waha:
+    container_name: waha
+    image: devlikeapro/waha:latest
+    restart: unless-stopped
+    ports:
+      - "3001:${WHATSAPP_API_PORT}"
+    volumes:
+      # Persist session auth + data on the host so the QR is not re-scanned on restart.
+      - ./data:/app/.sessions
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    env_file:
+      - .env
+  waha-bot:
+    container_name: waha-bot
+    # Build Dockerfile
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    
+
