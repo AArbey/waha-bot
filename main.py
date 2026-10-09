@@ -21,6 +21,7 @@ headers = {
 }
 
 BASE_URL = os.getenv("WAHA_URL")
+PUBLIC_BASE_URL = os.getenv("WAHA_PUBLIC_URL")
 LLM_URL = os.getenv("LLM_URL")
 LLM_MODEL = os.getenv("LLM_MODEL")
 ALLOWED_USERS = os.getenv('ALLOWED_USERS').split(',')
@@ -103,14 +104,14 @@ def send_seen(chat_id, message_id, participant):
     )
     response.raise_for_status()
 
-def get_file(file_url, message_id):
-    # file url is in format http://192.168.1.115:3001/api/files/default/false_112047157178399@lid_ACAFAC7E7F1F1CE5854E1FDE6B2A251F.oga
+def get_file(file_url, file_path):
+    # file url is in format http://192.168.1.115:3001/api/files/default/id.oga
     response = requests.get(
         file_url,
         headers=headers,
     )
     response.raise_for_status()
-    file_path = f"{AUDIO_SAVE_PATH}{message_id}.ogg"
+
     if response.status_code == 200:
         with open(file_path, "wb") as f:
             f.write(response.content)
@@ -158,6 +159,7 @@ def ask_ai(message, recent_messages=None):
         *(recent_messages or []),
         message,
     ]
+
 
     headers = {}
     if key := os.getenv("LLM_API_KEY"):
@@ -233,7 +235,7 @@ def read_message(payload):
                 with open(transcribed_file_path, "r") as f:
                     transcribed_text = f.read()
             else: 
-                get_file(audio_url, file_id)
+                get_file(audio_url, audio_file_path)
                 transcribed_text = transcribe_audio(audio_file_path)
                 with open(transcribed_file_path, "w") as f:
                     f.write(transcribed_text)
@@ -245,7 +247,7 @@ def read_message(payload):
                 text = "User tried to send an audio message but it could not be transcribed."
         
         if payload["media"]["mimetype"].startswith("image/"):
-            image_url = payload["media"]["url"].replace(MEDIA_RESPONSE_BASE_URL, BASE_URL)
+            image_url = payload["media"]["url"].replace(MEDIA_RESPONSE_BASE_URL, PUBLIC_BASE_URL).replace("@", "%40")
     
     message_context = text
     if text and image_url:
@@ -261,7 +263,7 @@ def read_message(payload):
     message_context = message_context if message_context else "User sent a message with no text and no audio."
     message_role = "assistant" if payload.get("fromMe") else "user"
     
-    return {"role": message_role, "content": message_context},
+    return {"role": message_role, "content": message_context}
 
 def checkCommand(payload):
     reply = None
