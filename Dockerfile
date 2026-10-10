@@ -10,6 +10,7 @@ RUN pip install --force-reinstall --no-deps git+https://github.com/SYSTRAN/faste
 
 COPY instructions.txt ./
 COPY main.py ./
+COPY bot_backend ./bot_backend
 RUN mkdir -p ./bot_data/audio/transcribed
 RUN mkdir -p ./bot_data/images/
 
