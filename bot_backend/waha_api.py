@@ -18,9 +18,7 @@ def read_message(payload, app):
 
         if payload["hasMedia"]:
             if payload["media"]["mimetype"].startswith("audio/"):
-                app.logger.info(f"Received audio message with mimetype {payload['media']['mimetype']}. Transcribing...")
                 text = get_text_from_audio(payload, app)
-                app.logger.info(f"Transcribed audio message: {text}")
 
             if payload["media"]["mimetype"].startswith("image/"):
                 image_url = payload["media"]["url"].replace(MEDIA_RESPONSE_BASE_URL, PUBLIC_BASE_URL).replace("@", "%40")
@@ -40,11 +38,10 @@ def read_message(payload, app):
     return {"role": message_role, "content": message_context}
 
 def send_post_request(endpoint, payload):
-    api_key = getenv("WAHA_API_KEY")
+    headers = {}
+    if api_key := getenv("WAHA_API_KEY"):
+        headers["x-api-key"] = api_key
 
-    headers = {
-        "x-api-key": api_key
-    }
     response = requests.post(
         BASE_URL + endpoint,
         json=payload,
@@ -54,10 +51,10 @@ def send_post_request(endpoint, payload):
     return response
 
 def send_get_request(endpoint, payload):
-    api_key = getenv("WAHA_API_KEY")
-    headers = {
-        "x-api-key": api_key
-    }
+    headers = {}
+    if api_key := getenv("WAHA_API_KEY"):
+        headers["x-api-key"] = api_key
+
     response = requests.get(
         BASE_URL + endpoint,
         params=payload,

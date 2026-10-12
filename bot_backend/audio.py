@@ -53,7 +53,6 @@ def get_text_from_audio(payload, app):
         if os.path.exists(transcribed_file_path):
             with open(transcribed_file_path, "r") as f:
                 transcribed_text = f.read()
-                app.logger.debug(f"Transcribed text for {file_id} already exists. Using cached version.")
         else: 
             get_file(audio_url, audio_file_path, app)
             transcribed_text = transcribe_audio(audio_file_path)

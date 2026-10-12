@@ -1,10 +1,21 @@
-
 import os
-import requests
+import litellm
 
-from .config import LLM_URL, LLM_MODEL
+from .config import LLM_URL, LLM_MODEL, MAX_TOOL_CALLS
+from .functions import SCHEMA, execute_tool
 
-def ask_ai(message, recent_messages=None):
+def prompt_llm(messages):
+    response = litellm.completion(
+        model=f"openai/{LLM_MODEL}",               # add `openai/` prefix to model so litellm knows to route to OpenAI
+        api_key=os.getenv("LLM_API_KEY"),                  # api key to your openai compatible endpoint
+        api_base=LLM_URL,     # set API Base of your Custom OpenAI Endpoint
+        messages=messages,
+        tools=SCHEMA,
+    )
+    return response
+
+def ask_ai(message, app, recent_messages=None):
+    app.logger.info(f"Received message: {message}")
     # Read instructions from "instructions.txt" file
     with open("instructions.txt", "r") as f:
         instructions = f.read()
@@ -15,22 +26,21 @@ def ask_ai(message, recent_messages=None):
         message,
     ]
 
-
-    headers = {}
-    if key := os.getenv("LLM_API_KEY"):
-        headers["Authorization"] = f"Bearer {key}"
-
-    response = requests.post(
-        f"{LLM_URL.rstrip('/')}/chat/completions",
-        headers=headers,
-        json={
-            "model": LLM_MODEL,
-            "messages": messages,
-            "temperature": 0.7,
-            "stream": False,
-            "cache_prompt": True,
-        },
-        timeout=(10, 300),
-    )
-    response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"]
+    for _ in range(MAX_TOOL_CALLS):  
+        ai_response = prompt_llm(messages)
+        response_message = ai_response.choices[0].message
+        tool_calls = ai_response.choices[0].message.tool_calls
+        if tool_calls:
+            app.logger.info(f"Tool calls detected: {tool_calls}")
+            messages.append(response_message)
+            for tool_call in tool_calls:
+                app.logger.info(f"\nExecuting tool call\n{tool_call}")
+                resultat = execute_tool(tool_call.function.name, tool_call.function.arguments)
+                messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": resultat})
+        else:
+            if response_message.content:
+                return response_message.content
+            else:
+                # If the ai reponse has no content, add a system message to the messages and continue the loop
+                messages.append({"role": "system","content": "You didn't provide any content in your response. Please provide a response with content."})
+                continue

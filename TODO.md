@@ -1,0 +1,4 @@
+- web search
+- implement TTS for voice calls (kitten-tts 2 ?)
+- reminders
+- image search ?
