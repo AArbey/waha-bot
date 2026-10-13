@@ -75,7 +75,7 @@ def whatsapp_webhook():
             app.logger.info("Received poll vote for someone else's pole, ignoring.")
             return "OK"
     
-        app.logger.info(f"Received poll vote from {phone_number}: {payload_vote}")
+        app.logger.info(f"Received poll vote from {phone_number}")
         send_seen(chat_id=chat_id, message_id=message_id, participant=participant)
         start_typing(chat_id=chat_id)
         handle_llm_config_vote(payload_vote)
@@ -91,8 +91,6 @@ def whatsapp_webhook():
     message_id = payload["id"]
     # For groups - who sent the message
     participant = payload.get('participant')
-
-    
 
     if not checkCommand(payload, app):
         try:

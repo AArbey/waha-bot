@@ -135,7 +135,6 @@ def get_recent_messages(chat_id):
     for message_data in whatsapp_response:
         recent_messages.append(read_message(message_data))
         
-
     # We need to reverse the list so that the most recent messages are at the end
     recent_messages.reverse()
     return recent_messages

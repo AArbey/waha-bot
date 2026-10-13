@@ -8,9 +8,8 @@ from .functions import SCHEMA, execute_tool
 from .database import get_llm_config, update_config
 
 def prompt_llm(messages):
-    current_app.logger.info(f"Prompting LLM with messages: {messages}")
     llm_url, llm_model, decrypted_api_key = get_llm_config()
-    current_app.logger.info(f"LLM configuration: URL={llm_url}, Model={llm_model}, API Key={'***' if decrypted_api_key else None}")
+    current_app.logger.debug(f"LLM configuration: URL={llm_url}, Model={llm_model}, API Key={'***' if decrypted_api_key else None}")
     if llm_url and llm_model and decrypted_api_key:
         response = litellm.completion(
             model=f"openai/{llm_model}",               

@@ -20,5 +20,7 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    volumes:
+      - ./bot_data:/usr/src/app/bot_data
     
 
