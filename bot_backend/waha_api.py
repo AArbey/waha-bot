@@ -1,5 +1,6 @@
 from os import getenv
 import time
+from flask import current_app
 
 from .audio import get_text_from_audio
 from .config import BASE_URL, MEDIA_RESPONSE_BASE_URL, PUBLIC_BASE_URL
@@ -7,7 +8,7 @@ from .config import BASE_URL, MEDIA_RESPONSE_BASE_URL, PUBLIC_BASE_URL
 import requests
 
 
-def read_message(payload, app):
+def read_message(payload):
     text, image_url = None, None
     try:
         if payload.get("_data").get("type") == "revoked":
@@ -18,7 +19,7 @@ def read_message(payload, app):
 
         if payload["hasMedia"]:
             if payload["media"]["mimetype"].startswith("audio/"):
-                text = get_text_from_audio(payload, app)
+                text = get_text_from_audio(payload)
 
             if payload["media"]["mimetype"].startswith("image/"):
                 image_url = payload["media"]["url"].replace(MEDIA_RESPONSE_BASE_URL, PUBLIC_BASE_URL).replace("@", "%40")
@@ -32,7 +33,7 @@ def read_message(payload, app):
         message_context = message_context if message_context else "User sent a message with no text and no audio."
         message_role = "assistant" if payload.get("fromMe") else "user"
     except Exception as e:
-        app.logger.error(f"Error while reading message payload: {e}")
+        current_app.logger.error(f"Error while reading message payload: {e}")
         message_context = "Error while reading message payload."
         message_role = "assistant"
     return {"role": message_role, "content": message_context}
@@ -72,6 +73,19 @@ def send_message(chat_id, text):
     }
     send_post_request("sendText", payload)
 
+def send_poll(chat_id, question, options, multiple_answers=False):
+    payload = {
+        "chatId": chat_id,
+        "poll": {
+            "name": question,
+            "options": list(options) if options else [],
+            "multipleAnswers": multiple_answers
+        },
+        "session": "default"
+    }
+    current_app.logger.info(f"Sending poll with payload: {payload}")
+    send_post_request("sendPoll", payload)
+
 def reply(chat_id, message_id, text):
     payload = {
         "chatId": chat_id,
@@ -104,7 +118,7 @@ def stop_typing(chat_id):
     }
     send_post_request("stopTyping", payload)
 
-def get_recent_messages(chat_id, app):
+def get_recent_messages(chat_id):
     # We need to get the messages from the past 24 hours to provide context to the AI
     current_timestamp = int(time.time())
     twenty_four_hours_ago = current_timestamp - 24 * 60 * 60
@@ -119,7 +133,7 @@ def get_recent_messages(chat_id, app):
     recent_messages = []
     # Need to filter
     for message_data in whatsapp_response:
-        recent_messages.append(read_message(message_data, app=app))
+        recent_messages.append(read_message(message_data))
         
 
     # We need to reverse the list so that the most recent messages are at the end

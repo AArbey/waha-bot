@@ -8,9 +8,11 @@ BASE_URL = getenv("WAHA_URL")
 PUBLIC_BASE_URL = getenv("WAHA_PUBLIC_URL")
 LLM_URL = getenv("LLM_URL")
 LLM_MODEL = getenv("LLM_MODEL")
+LLM_API_KEY = getenv("LLM_API_KEY")
 ALLOWED_USERS = getenv('ALLOWED_USERS').split(',')
 TIMEZONE = pytz.timezone(getenv("TZ"))
 MAX_TOOL_CALLS = int(getenv("MAX_TOOL_CALLS", 5))
+DB_PATH = getenv("DB_PATH", "./bot_data/database.db")
 
 IMAGE_SAVE_PATH = "./bot_data/images/"
 
