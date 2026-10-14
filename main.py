@@ -102,7 +102,7 @@ def whatsapp_webhook():
             message = read_message(payload)
             app.logger.info(f"Received message from {phone_number}: {message}")
             history = get_recent_messages(chat_id=chat_id)
-            reply = ask_ai(message, recent_messages=history)
+            reply = ask_ai(message, recent_messages=history, chat_id=chat_id)
         except Exception as e:
             app.logger.error(f"Error while processing message from {phone_number}: {e}")
             reply = "Sorry, I couldn't process your message. Please try again later.\nFull error: " + str(e)

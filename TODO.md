@@ -3,3 +3,4 @@
 - reminders
 - image search ?
 - https://github.com/vectorize-io/hindsight
+- every 6 hours check current reminders and ask user if need any clarification

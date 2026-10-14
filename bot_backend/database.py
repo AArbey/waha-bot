@@ -111,3 +111,60 @@ def get_llm_config():
         if encrypted_api_key else None
     )
     return llm_url, llm_model, api_key
+
+def add_new_reminder(chat_id, message, target_time, next_reminder_time, importance=0):
+    try:
+        with connexion() as db:
+            query = f"INSERT INTO reminders (chat_id, message, target_time, next_reminder_time, importance) VALUES (?,?,?,?,?)"
+            db.execute(query, (chat_id, message, target_time, next_reminder_time, importance))
+            db.commit()
+    except Exception as e:
+        print(f"Error inserting new reminder into database: {e}")
+
+def get_due_reminders(current_time):
+    try:
+        with connexion() as db:
+            query = f"SELECT * FROM reminders WHERE next_reminder_time <= ?"
+            cursor = db.execute(query, (current_time,))
+            results = cursor.fetchall()
+            return results
+    except Exception as e:
+        print(f"Error retrieving due reminders from database: {e}")
+        return []
+
+def get_all_reminders_for_chat(chat_id):
+    try:
+        with connexion() as db:
+            query = f"SELECT * FROM reminders WHERE chat_id = ?"
+            cursor = db.execute(query, (chat_id,))
+            results = cursor.fetchall()
+            current_app.logger.info(f"Retrieved these reminders for chat_id {chat_id}: {results}")
+            return results
+    except Exception as e:
+        print(f"Error retrieving all reminders from database: {e}")
+        return []
+
+def remove_reminder(reminder_id):
+    try:
+        with connexion() as db:
+            query = f"DELETE FROM reminders WHERE id = ?"
+            db.execute(query, (reminder_id,))
+            db.commit()
+    except Exception as e:
+        print(f"Error removing reminder from database: {e}")
+
+def edit_reminder(reminder_id, message=None, target_time=None, next_reminder_time=None, importance=None):
+    try:
+        with connexion() as db:
+            query = f"""
+                UPDATE reminders
+                SET message = COALESCE(?, message),
+                    target_time = COALESCE(?, target_time),
+                    next_reminder_time = COALESCE(?, next_reminder_time),
+                    importance = COALESCE(?, importance)
+                WHERE id = ?
+            """
+            db.execute(query, (message, target_time, next_reminder_time, importance, reminder_id))
+            db.commit()
+    except Exception as e:
+        print(f"Error editing reminder in database: {e}")

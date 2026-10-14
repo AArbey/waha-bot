@@ -20,7 +20,7 @@ def prompt_llm(messages):
         )
         return response
 
-def ask_ai(message, recent_messages=None):
+def ask_ai(message, recent_messages=None, chat_id=None):
     current_app.logger.info(f"Received message: {message}")
     # Read instructions from "instructions.txt" file
     with open("instructions.txt", "r") as f:
@@ -41,7 +41,7 @@ def ask_ai(message, recent_messages=None):
             messages.append(response_message)
             for tool_call in tool_calls:
                 current_app.logger.info(f"\nExecuting tool call\n{tool_call}")
-                resultat = execute_tool(tool_call.function.name, tool_call.function.arguments)
+                resultat = execute_tool(tool_call.function.name, tool_call.function.arguments, chat_id=chat_id)
                 messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": resultat})
         else:
             if response_message.content:

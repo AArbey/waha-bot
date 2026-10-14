@@ -1,10 +1,10 @@
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-class WeatherArgs(BaseModel):
+class GetWeatherArgs(BaseModel):
     city: str = Field(min_length=1, description="Name of the city, ex : Paris")
 
-def getWeather(city: str) -> str:
+def doGetWeather(city: str) -> str:
     try:
         geo = requests.get(
             "https://geocoding-api.open-meteo.com/v1/search",

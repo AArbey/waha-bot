@@ -16,3 +16,4 @@ httpx
 litellm
 flask-sqlalchemy 
 cryptography
+APScheduler>=3.11,<4
